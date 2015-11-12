@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 
@@ -14,8 +9,8 @@ output:
 
 ### Downloading Data
 This chunk checks if the working directory has the required file and if not, downloads and unzips it.
-```{r, results = "hide"}
 
+```r
 Url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 activityzip <- "activity.zip"
 activityfile <- "activity.csv"
@@ -33,7 +28,8 @@ if (!file.exists(activityfile)) {
 
 ### Reading data and converting dates
 This chunk reads the data and converts date to a date class.
-```{r}
+
+```r
 suppressMessages(library(lubridate))
 require(lubridate)
 rawactivity <- read.csv(activityfile)
@@ -49,7 +45,8 @@ rawactivity$date <- ymd(rawactivity$date)
 
 ### Total number of steps
 This chunk calculates the total steps, omitting NA values.
-```{r}
+
+```r
 require(stats)
 cleanactivity <- na.omit(rawactivity)
 stepsperday <- aggregate(list(total_steps = cleanactivity$steps), list(date = cleanactivity$date), sum)
@@ -58,22 +55,26 @@ stepsperday <- aggregate(list(total_steps = cleanactivity$steps), list(date = cl
 
 ### Histogram with omitted NA values
 This chunk plots a histogram of frequency of steps
-```{r histnaomit}
+
+```r
 par(bg = "wheat1")
 hist(stepsperday$total_steps, col = "red", main = "Frequency of Total Steps Each Day", xlab = "total steps")
 ```
 
+![](PA1_template_files/figure-html/histnaomit-1.png) 
+
 
 ### Mean and median of steps
 This chunk calculates the mean and median values of steps and alters scientific notation to standard notation for ease of comparison
-```{r}
+
+```r
 options(scipen = 100)
 stepsmean <- mean(stepsperday$total_steps)
 stepsmedian <- median(stepsperday$total_steps)
 ```
 
-**The mean number of steps per day is `r stepsmean`**
-**The median number of steps per day is `r stepsmedian`**
+**The mean number of steps per day is 10766.1886792**
+**The median number of steps per day is 10765**
 
 
 
@@ -84,22 +85,26 @@ stepsmedian <- median(stepsperday$total_steps)
 
 ### Times series plot of interval and mean steps
 This chunk finds the mean number of steps taken per interval and then plots a time series graph.
-```{r intervalmean}
+
+```r
 stepsperinterval <- aggregate(list(mean_steps = cleanactivity$steps), list(interval = cleanactivity$interval), mean)
 
 par(bg = "wheat1")
 plot(stepsperinterval$mean_steps ~ stepsperinterval$interval, type = "l", xlab = "Interval", ylab = "Mean Steps", main = "Time Series Plot of Mean Steps per Interval")
 ```
 
+![](PA1_template_files/figure-html/intervalmean-1.png) 
+
 
 ### Finding which interval has the maximum number of steps
 This chunk finds the maximum number of steps and which interval it belongs to.
-```{r}
+
+```r
 maxsteps <- max(stepsperinterval$mean_steps)
 maxinterval <- stepsperinterval[stepsperinterval$mean_steps == maxsteps, 1]
 ```
 
-**Time interval, `r maxinterval`, contains the maximum number of steps, `r maxsteps`.**
+**Time interval, 835, contains the maximum number of steps, 206.1698113.**
 
 
 
@@ -110,16 +115,18 @@ maxinterval <- stepsperinterval[stepsperinterval$mean_steps == maxsteps, 1]
 
 ### Missing total
 This chunk finds the total amount of missing values
-```{r}
+
+```r
 missingsum <- sum(as.numeric(is.na(rawactivity)))
 ```
 
-**There are `r missingsum` missing (NA) values in the dataset.**
+**There are 2304 missing (NA) values in the dataset.**
 
 
 ### Replacing NA values and saving as a new dataset
 This chunk saves the old dataset as a new dataset and then replaces its NA values with the mean value of each time interval.
-```{r}
+
+```r
 newactivity <- rawactivity
 
 newactivity$steps <- ifelse(is.na(newactivity$steps), stepsperinterval$mean_steps[stepsperinterval$interval %in% newactivity$interval], newactivity$steps)
@@ -128,21 +135,25 @@ newactivity$steps <- ifelse(is.na(newactivity$steps), stepsperinterval$mean_step
 
 ### Plotting a new histogram and finding mean and median
 This chunk first creates a new dataframe consisting of total steps taken per day. It then creates a histogram from this data.
-```{r histnamean}
+
+```r
 newsteps <- aggregate(list(total_steps = newactivity$steps), list(date = newactivity$date), sum)
 
 par(bg = "wheat")
 hist(newsteps$total_steps, col = "blue", xlab = "Total Steps", main = "Frequency of Total Steps Each Day", sub = "(NA values replaced with time interval mean)" )
 ```
 
+![](PA1_template_files/figure-html/histnamean-1.png) 
+
 
 This last part of the chunk calculates the mean and median of the revised data.
-```{r}
+
+```r
 newmean <- mean(newsteps$total_steps)
 newmedian <- median(newsteps$total_steps)
 ```
 
-**The new mean is `r newmean` and the new median is `r newmedian`.**
+**The new mean is 10766.1886792 and the new median is 10766.1886792.**
 **Imputing missing values with mean values caused the new mean and median to become identical, because instead of being removed, they added more data to the "center" of the data distribution.** 
 
 
@@ -154,7 +165,8 @@ newmedian <- median(newsteps$total_steps)
 
 ### Creating weekday and weekend factors
 This chunk adds a new column, "weekday_weekend", containing factors which tell whether the day is a weekday or in the weekend.
-```{r}
+
+```r
 newactivity["weekday_weekend"] <- factor(weekdays(newactivity$date))
 
 levels(newactivity$weekday_weekend) <- list(weekday = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = c("Saturday", "Sunday"))
@@ -163,7 +175,8 @@ levels(newactivity$weekday_weekend) <- list(weekday = c("Monday", "Tuesday", "We
 
 ### Panel plot
 This chunk creates subsets of data based on whether they are labeled weekday or weekend. It then creates separate time series plots for these data and displays them in a panel plot.
-```{r panelplot}
+
+```r
 weekdaydata <- subset(newactivity, newactivity$weekday_weekend == "weekday")
 
 weekdaymean <- aggregate(list(mean_steps = weekdaydata$steps), list(interval = weekdaydata$interval), mean)
@@ -178,3 +191,5 @@ plot(weekdaymean$interval, weekdaymean$mean_steps, main = "Weekdays", type = "l"
 
 plot(weekendmean$interval, weekendmean$mean_steps, main = "Weekend", type = "l", xlab = "Interval", ylab = "Mean Steps", col = "blue")
 ```
+
+![](PA1_template_files/figure-html/panelplot-1.png) 
